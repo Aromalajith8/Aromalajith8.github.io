@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIxNjg5MTM2MzY3MTM4OTQ2ODEwNSIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjXzljODZmZTU0ZTJkNWE2ODFfaW5kZXguaHRtbC04ODEifSwiZXhwIjoxNzkyNTE1MDc1LCJpYXQiOjE3OTI1MTE0NzUsImFsZyI6IlJTMjU2In0.f1XlnDhk3GDhcodZGAogkjW44B5s8lL-qur_3nZL-ou5nH-1ALjutnxaQfOAvqccH0O2eikQAlgbWDh7F8SJ04KnZKrWz80dKDDH7uOFP1Pbt9kasZEKv3EXyO9xf_TRd4FaUhGpBAevikH1_5X0Xju2dQh-0HvaN3IGlW7Pm8_aOHZ2klKEpFKjUORx0wdFUiPZqpzy3kxc4m0mSfc3vVI9p3SmQNajrGElO_rJ90-aw9ucBCOBWLu5bukVH9BHUTIVYO84Woy5E2XY5vXMgbTMfP_DOdgJtxdypvKyI0ADqoaMCRhdDsnyyl-d0UQzd8g2Siodl5QMwb0mtBW4zQ","c_9c86fe54e2d5a681_index.html-881")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.j=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.i="";var l=0,t=null,r=null,q=[],F=new TextEncoder,G=new TextDecoder;
+c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*16|0;return(f===
+"x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;(g=t)==null||g.postMessage(a)}};
+Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aromal Ajith — AI Evaluator &amp; Electronics Builder</title>
+  <meta name="description" content="Field manual and engineering logbook of Aromal Ajith — AI Reviewer, Content Evaluator, and Electronics Engineering graduate based in Kerala, India.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Instrument Serif, Plus Jakarta Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Instrument Serif"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            paper: {
+              DEFAULT: '#F6F4EE',
+              card: '#EFECE4',
+              border: '#D8D3C8',
+              ink: '#161615',
+              muted: '#5A5852',
+            },
+            bench: {
+              DEFAULT: '#121211',
+              card: '#1B1B19',
+              border: '#2E2D2A',
+              ink: '#ECE9E0',
+              muted: '#9A968E',
+            },
+            signal: {
+              orange: '#D9532F',
+              green: '#2A7B5C',
+              amber: '#C88A2B'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Tactile blueprint & grain aesthetics */
+    :root {
+      --bg-grid: rgba(22, 22, 21, 0.045);
+    }
+    html.dark {
+      --bg-grid: rgba(236, 233, 224, 0.04);
+    }
+    .blueprint-grid {
+      background-size: 28px 28px;
+      background-image: 
+        linear-gradient(to right, var(--bg-grid) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--bg-grid) 1px, transparent 1px);
+    }
+    /* Custom subtle scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #9A968E;
+      border-radius: 3px;
+    }
+    /* Registration crosshair corners */
+    .corner-mark {
+      position: relative;
+    }
+    .corner-mark::before,
+    .corner-mark::after {
+      content: '+';
+      position: absolute;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1;
+      color: #9A968E;
+      pointer-events: none;
+    }
+    .corner-mark::before {
+      top: -6px;
+      left: -4px;
+    }
+    .corner-mark::after {
+      bottom: -6px;
+      right: -4px;
+    }
+  </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:"Plus Jakarta Sans", system-ui, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:"JetBrains Mono", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.sticky{position:sticky}.inset-0{inset:0px}.top-0{top:0px}.z-40{z-index:40}.z-50{z-index:50}.col-span-2{grid-column:span 2 / span 2}.mx-auto{margin-left:auto;margin-right:auto}.my-8{margin-top:2rem;margin-bottom:2rem}.mb-1{margin-bottom:0.25rem}.mb-12{margin-bottom:3rem}.mb-16{margin-bottom:4rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mb-6{margin-bottom:1.5rem}.mb-8{margin-bottom:2rem}.mt-0\.5{margin-top:0.125rem}.mt-1{margin-top:0.25rem}.line-clamp-2{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}.block{display:block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.h-14{height:3.5rem}.h-2{height:0.5rem}.h-2\.5{height:0.625rem}.h-3\.5{height:0.875rem}.h-4{height:1rem}.max-h-\[90vh\]{max-height:90vh}.min-h-screen{min-height:100vh}.w-2{width:0.5rem}.w-2\.5{width:0.625rem}.w-3\.5{width:0.875rem}.w-4{width:1rem}.w-full{width:100%}.max-w-2xl{max-width:42rem}.max-w-5xl{max-width:64rem}.shrink-0{flex-shrink:0}.flex-grow{flex-grow:1}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}.scroll-mt-20{scroll-margin-top:5rem}.list-inside{list-style-position:inside}.list-decimal{list-style-type:decimal}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-center{align-items:center}.items-baseline{align-items:baseline}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}.gap-8{gap:2rem}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-2\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.625rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.625rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.space-y-6 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem * var(--tw-space-y-reverse))}.overflow-y-auto{overflow-y:auto}.scroll-smooth{scroll-behavior:smooth}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.whitespace-pre-wrap{white-space:pre-wrap}.rounded{border-radius:0.25rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-l{border-left-width:1px}.border-l-2{border-left-width:2px}.border-t{border-top-width:1px}.border-paper-border{--tw-border-opacity:1;border-color:rgb(216 211 200 / var(--tw-border-opacity, 1))}.border-paper-border\/60{border-color:rgb(216 211 200 / 0.6)}.border-signal-orange{--tw-border-opacity:1;border-color:rgb(217 83 47 / var(--tw-border-opacity, 1))}.border-signal-orange\/40{border-color:rgb(217 83 47 / 0.4)}.bg-black\/70{background-color:rgb(0 0 0 / 0.7)}.bg-paper{--tw-bg-opacity:1;background-color:rgb(246 244 238 / var(--tw-bg-opacity, 1))}.bg-paper-card{--tw-bg-opacity:1;background-color:rgb(239 236 228 / var(--tw-bg-opacity, 1))}.bg-paper-card\/50{background-color:rgb(239 236 228 / 0.5)}.bg-paper-card\/60{background-color:rgb(239 236 228 / 0.6)}.bg-paper-card\/70{background-color:rgb(239 236 228 / 0.7)}.bg-paper-card\/80{background-color:rgb(239 236 228 / 0.8)}.bg-paper-ink{--tw-bg-opacity:1;background-color:rgb(22 22 21 / var(--tw-bg-opacity, 1))}.bg-paper\/80{background-color:rgb(246 244 238 / 0.8)}.bg-paper\/85{background-color:rgb(246 244 238 / 0.85)}.bg-paper\/90{background-color:rgb(246 244 238 / 0.9)}.bg-signal-green{--tw-bg-opacity:1;background-color:rgb(42 123 92 / var(--tw-bg-opacity, 1))}.bg-signal-green\/15{background-color:rgb(42 123 92 / 0.15)}.bg-signal-orange{--tw-bg-opacity:1;background-color:rgb(217 83 47 / var(--tw-bg-opacity, 1))}.bg-signal-orange\/10{background-color:rgb(217 83 47 / 0.1)}.bg-signal-orange\/15{background-color:rgb(217 83 47 / 0.15)}.p-1{padding:0.25rem}.p-1\.5{padding:0.375rem}.p-3{padding:0.75rem}.p-3\.5{padding:0.875rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-1\.5{padding-left:0.375rem;padding-right:0.375rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.pb-2{padding-bottom:0.5rem}.pb-20{padding-bottom:5rem}.pb-3{padding-bottom:0.75rem}.pb-4{padding-bottom:1rem}.pb-6{padding-bottom:1.5rem}.pl-2\.5{padding-left:0.625rem}.pt-1{padding-top:0.25rem}.pt-2{padding-top:0.5rem}.pt-3{padding-top:0.75rem}.pt-4{padding-top:1rem}.pt-8{padding-top:2rem}.text-left{text-align:left}.text-center{text-align:center}.font-mono{font-family:"JetBrains Mono", monospace}.font-sans{font-family:"Plus Jakarta Sans", system-ui, sans-serif}.font-serif{font-family:"Instrument Serif", Georgia, serif}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.italic{font-style:italic}.leading-\[1\.06\]{line-height:1.06}.leading-relaxed{line-height:1.625}.tracking-tight{letter-spacing:-0.025em}.tracking-wider{letter-spacing:0.05em}.text-paper{--tw-text-opacity:1;color:rgb(246 244 238 / var(--tw-text-opacity, 1))}.text-paper-ink{--tw-text-opacity:1;color:rgb(22 22 21 / var(--tw-text-opacity, 1))}.text-paper-ink\/90{color:rgb(22 22 21 / 0.9)}.text-paper-muted{--tw-text-opacity:1;color:rgb(90 88 82 / var(--tw-text-opacity, 1))}.text-signal-green{--tw-text-opacity:1;color:rgb(42 123 92 / var(--tw-text-opacity, 1))}.text-signal-orange{--tw-text-opacity:1;color:rgb(217 83 47 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.underline{-webkit-text-decoration-line:underline;text-decoration-line:underline}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.shadow{--tw-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-opacity{transition-property:opacity;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-200{transition-duration:200ms}.selection\:bg-signal-orange *::selection{--tw-bg-opacity:1;background-color:rgb(217 83 47 / var(--tw-bg-opacity, 1))}.selection\:text-white *::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.selection\:bg-signal-orange::selection{--tw-bg-opacity:1;background-color:rgb(217 83 47 / var(--tw-bg-opacity, 1))}.selection\:text-white::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.hover\:border-signal-orange:hover{--tw-border-opacity:1;border-color:rgb(217 83 47 / var(--tw-border-opacity, 1))}.hover\:border-signal-orange\/60:hover{border-color:rgb(217 83 47 / 0.6)}.hover\:bg-signal-orange:hover{--tw-bg-opacity:1;background-color:rgb(217 83 47 / var(--tw-bg-opacity, 1))}.hover\:text-paper-ink:hover{--tw-text-opacity:1;color:rgb(22 22 21 / var(--tw-text-opacity, 1))}.hover\:text-signal-orange:hover{--tw-text-opacity:1;color:rgb(217 83 47 / var(--tw-text-opacity, 1))}.hover\:underline:hover{-webkit-text-decoration-line:underline;text-decoration-line:underline}.hover\:opacity-95:hover{opacity:0.95}.focus\:border-signal-orange:focus{--tw-border-opacity:1;border-color:rgb(217 83 47 / var(--tw-border-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.active\:scale-\[0\.99\]:active{--tw-scale-x:0.99;--tw-scale-y:0.99;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.dark\:border-bench-border:is(.dark *){--tw-border-opacity:1;border-color:rgb(46 45 42 / var(--tw-border-opacity, 1))}.dark\:border-bench-border\/60:is(.dark *){border-color:rgb(46 45 42 / 0.6)}.dark\:bg-amber-400:is(.dark *){--tw-bg-opacity:1;background-color:rgb(251 191 36 / var(--tw-bg-opacity, 1))}.dark\:bg-bench:is(.dark *){--tw-bg-opacity:1;background-color:rgb(18 18 17 / var(--tw-bg-opacity, 1))}.dark\:bg-bench-card:is(.dark *){--tw-bg-opacity:1;background-color:rgb(27 27 25 / var(--tw-bg-opacity, 1))}.dark\:bg-bench-card\/50:is(.dark *){background-color:rgb(27 27 25 / 0.5)}.dark\:bg-bench-card\/60:is(.dark *){background-color:rgb(27 27 25 / 0.6)}.dark\:bg-bench-card\/70:is(.dark *){background-color:rgb(27 27 25 / 0.7)}.dark\:bg-bench-card\/80:is(.dark *){background-color:rgb(27 27 25 / 0.8)}.dark\:bg-bench-ink:is(.dark *){--tw-bg-opacity:1;background-color:rgb(236 233 224 / var(--tw-bg-opacity, 1))}.dark\:bg-bench\/80:is(.dark *){background-color:rgb(18 18 17 / 0.8)}.dark\:bg-bench\/85:is(.dark *){background-color:rgb(18 18 17 / 0.85)}.dark\:bg-bench\/90:is(.dark *){background-color:rgb(18 18 17 / 0.9)}.dark\:text-bench:is(.dark *){--tw-text-opacity:1;color:rgb(18 18 17 / var(--tw-text-opacity, 1))}.dark\:text-bench-ink:is(.dark *){--tw-text-opacity:1;color:rgb(236 233 224 / var(--tw-text-opacity, 1))}.dark\:text-bench-ink\/90:is(.dark *){color:rgb(236 233 224 / 0.9)}.dark\:text-bench-muted:is(.dark *){--tw-text-opacity:1;color:rgb(154 150 142 / var(--tw-text-opacity, 1))}.dark\:hover\:bg-signal-orange:hover:is(.dark *){--tw-bg-opacity:1;background-color:rgb(217 83 47 / var(--tw-bg-opacity, 1))}.dark\:hover\:text-bench-ink:hover:is(.dark *){--tw-text-opacity:1;color:rgb(236 233 224 / var(--tw-text-opacity, 1))}.dark\:hover\:text-white:hover:is(.dark *){--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}@media (min-width: 640px){.sm\:inline{display:inline}.sm\:flex{display:flex}.sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.sm\:flex-row{flex-direction:row}.sm\:items-center{align-items:center}.sm\:p-10{padding:2.5rem}.sm\:p-5{padding:1.25rem}.sm\:p-7{padding:1.75rem}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}.sm\:text-right{text-align:right}.sm\:text-3xl{font-size:1.875rem;line-height:2.25rem}.sm\:text-4xl{font-size:2.25rem;line-height:2.5rem}.sm\:text-5xl{font-size:3rem;line-height:1}.sm\:text-6xl{font-size:3.75rem;line-height:1}.sm\:text-base{font-size:1rem;line-height:1.5rem}.sm\:text-lg{font-size:1.125rem;line-height:1.75rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}.sm\:text-xl{font-size:1.25rem;line-height:1.75rem}}@media (min-width: 768px){.md\:inline-block{display:inline-block}.md\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.md\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}}@media (min-width: 1024px){.lg\:col-span-4{grid-column:span 4 / span 4}.lg\:col-span-8{grid-column:span 8 / span 8}.lg\:grid-cols-12{grid-template-columns:repeat(12, minmax(0, 1fr))}.lg\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}}</style></head>
+
+<body class="bg-paper text-paper-ink dark:bg-bench dark:text-bench-ink font-sans antialiased selection:bg-signal-orange selection:text-white transition-colors duration-200 blueprint-grid min-h-screen flex flex-col">
+
+  <!-- ===================================================================== -->
+  <!-- TOP TELEMETRY & NAVIGATION BAR                                        -->
+  <!-- ===================================================================== -->
+  <header class="sticky top-0 z-40 backdrop-blur-md bg-paper/90 dark:bg-bench/90 border-b border-paper-border dark:border-bench-border">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+      
+      <!-- Left: Index Number & Identity -->
+      <a href="#top" class="flex items-center gap-2.5 group">
+        <span class="w-2.5 h-2.5 rounded-full bg-signal-green animate-pulse" title="Available for projects &amp; roles"></span>
+        <span class="font-mono text-xs tracking-wider uppercase font-semibold">AA // LAB-INDEX.08</span>
+        <span class="hidden md:inline-block font-mono text-[11px] text-paper-muted dark:text-bench-muted border-l border-paper-border dark:border-bench-border pl-2.5">
+          KERALA, IN (11.87° N, 75.37° E)
+        </span>
+      </a>
+
+      <!-- Center: Quick Section Jump Links -->
+      <nav class="hidden sm:flex items-center gap-5 font-mono text-xs text-paper-muted dark:text-bench-muted">
+        <a href="#logbook" class="hover:text-signal-orange transition-colors">01.LOGBOOK</a>
+        <a href="#builds" class="hover:text-signal-orange transition-colors">02.BUILDS</a>
+        <a href="#matrix" class="hover:text-signal-orange transition-colors">03.MATRIX</a>
+        <a href="#education" class="hover:text-signal-orange transition-colors">04.ACADEMIC</a>
+        <a href="#dispatch" class="hover:text-signal-orange transition-colors">05.CONTACT</a>
+      </nav>
+
+      <!-- Right: Night Bench Mode + 1-Click GitHub Hosting Helper (Stripped on export) -->
+      <div class="flex items-center gap-2">
+        <button id="themeToggleBtn" onclick="toggleBenchMode()" class="px-2.5 py-1.5 rounded border border-paper-border dark:border-bench-border bg-paper-card dark:bg-bench-card font-mono text-xs flex items-center gap-1.5 hover:border-signal-orange transition-colors" title="Toggle Day Paper / Night Bench Mode">
+          <span id="themeIcon" class="w-2 h-2 rounded-full bg-paper-ink dark:bg-amber-400"></span>
+          <span id="themeLabel">BENCH: OFF</span>
+        </button>
+
+        <!-- EXPORT HELPER BUTTON: Automatically removed when user downloads clean index.html -->
+        
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- MAIN FIELD MANUAL CONTAINER                                           -->
+  <!-- ===================================================================== -->
+  <main id="top" class="max-w-5xl mx-auto w-full px-4 sm:px-6 pt-8 pb-20 flex-grow">
+
+    <!-- DEPLOYMENT BANNER (Stripped automatically when exported) -->
+    
+
+    <!-- ===================================================================== -->
+    <!-- HERO / DOSSIER HEADER                                                 -->
+    <!-- ===================================================================== -->
+    <section class="border border-paper-border dark:border-bench-border bg-paper/85 dark:bg-bench/85 rounded-lg p-6 sm:p-10 mb-12 corner-mark">
+      
+      <!-- Top Metadata Strip -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-6 mb-6 border-b border-paper-border dark:border-bench-border font-mono text-xs text-paper-muted dark:text-bench-muted">
+        <div>DOC REF: <span class="text-paper-ink dark:text-bench-ink font-medium">AA-PORTFOLIO-REV.2026</span></div>
+        <div class="flex items-center gap-4">
+          <span>DISCIPLINE: <strong class="text-paper-ink dark:text-bench-ink">ELECTRONICS &amp; AI EVALUATION</strong></span>
+          <span class="hidden sm:inline">|</span>
+          <span id="liveClock" class="hidden sm:inline">IST 21:32:04</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left 8 Cols: Editorial Intro -->
+        <div class="lg:col-span-8 space-y-5">
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded border border-paper-border dark:border-bench-border bg-paper-card dark:bg-bench-card font-mono text-xs">
+            <span class="text-signal-orange font-bold">#</span>
+            <span>AI Reviewer &amp; Content Evaluator · Electronics Engineer</span>
+          </div>
+
+          <h1 class="font-serif text-4xl sm:text-6xl leading-[1.06] tracking-tight text-paper-ink dark:text-bench-ink">
+            Aromal Ajith. <br>
+            <span class="italic font-normal text-paper-muted dark:text-bench-muted">
+              Where hardware protocols meet rigorous human evaluation.
+            </span>
+          </h1>
+
+          <p class="text-base sm:text-lg text-paper-muted dark:text-bench-muted leading-relaxed max-w-2xl">
+            I’m an Electronics Engineering graduate from <strong class="text-paper-ink dark:text-bench-ink font-medium">GPC Mattannur</strong> who works at the boundary of low-level hardware (<code class="font-mono text-sm px-1.5 py-0.5 rounded bg-paper-card dark:bg-bench-card">ESP32</code>, <code class="font-mono text-sm px-1.5 py-0.5 rounded bg-paper-card dark:bg-bench-card">C++</code>, wireless parameters) and Large Language Model evaluation. Instead of taking AI output at face value, I stress-test code generation, verify technical claims against real datasheets, and write documentation that engineers actually enjoy reading.
+          </p>
+
+          <!-- Primary Action Controls -->
+          <div class="pt-2 flex flex-wrap items-center gap-3">
+            <a href="mailto:aromalajith2007@gmail.com" class="px-4 py-2.5 rounded bg-paper-ink text-paper dark:bg-bench-ink dark:text-bench font-mono text-xs uppercase tracking-wider font-medium hover:bg-signal-orange dark:hover:bg-signal-orange dark:hover:text-white transition-colors">
+              aromalajith2007@gmail.com
+            </a>
+            <a href="https://github.com/Aromalajith8" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded border border-paper-border dark:border-bench-border bg-paper-card dark:bg-bench-card font-mono text-xs uppercase tracking-wider hover:border-signal-orange transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path></svg>
+              <span>GitHub / Aromalajith8</span>
+            </a>
+            <a href="https://www.linkedin.com/in/aromal-ajith-a80171343" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded border border-paper-border dark:border-bench-border bg-paper-card dark:bg-bench-card font-mono text-xs uppercase tracking-wider hover:border-signal-orange transition-colors flex items-center gap-1.5">
+              <span>LinkedIn</span>
+              <span>↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Right 4 Cols: Tactile Operator Spec Card -->
+        <div class="lg:col-span-4 border border-paper-border dark:border-bench-border bg-paper-card/70 dark:bg-bench-card/70 rounded p-4 font-mono text-xs space-y-3">
+          <div class="flex items-center justify-between border-b border-paper-border dark:border-bench-border pb-2">
+            <span class="uppercase font-semibold text-paper-muted dark:text-bench-muted">OPERATOR SPEC SHEET</span>
+            <span class="px-1.5 py-0.5 rounded bg-signal-green/15 text-signal-green text-[10px]">VERIFIED</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1 py-1 border-b border-paper-border/60 dark:border-bench-border/60">
+            <span class="text-paper-muted dark:text-bench-muted">NAME:</span>
+            <span class="col-span-2 font-medium">Aromal Ajith</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1 py-1 border-b border-paper-border/60 dark:border-bench-border/60">
+            <span class="text-paper-muted dark:text-bench-muted">DEGREE:</span>
+            <span class="col-span-2">Diploma in Electronics Eng. (CGPA 8.05)</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1 py-1 border-b border-paper-border/60 dark:border-bench-border/60">
+            <span class="text-paper-muted dark:text-bench-muted">CORE STACK:</span>
+            <span class="col-span-2">Python, C++, ESP32, Prompt Eng, Tech Docs</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1 py-1 border-b border-paper-border/60 dark:border-bench-border/60">
+            <span class="text-paper-muted dark:text-bench-muted">DIRECT LINE:</span>
+            <a href="tel:+919544149480" class="col-span-2 hover:text-signal-orange underline">+91 9544149480</a>
+          </div>
+
+          <div class="pt-1">
+            <div class="text-[11px] text-paper-muted dark:text-bench-muted mb-1">WORKING PRINCIPLE:</div>
+            <blockquote class="italic text-paper-ink dark:text-bench-ink border-l-2 border-signal-orange pl-2.5 py-0.5">
+              "Never trust an LLM or a circuit without probing the output pin first."
+            </blockquote>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 01 // FIELD LOGBOOK (EXPERIENCE)                                      -->
+    <!-- ===================================================================== -->
+    <section id="logbook" class="mb-16 scroll-mt-20">
+      <div class="flex items-baseline justify-between border-b border-paper-border dark:border-bench-border pb-3 mb-6">
+        <div class="flex items-baseline gap-3">
+          <span class="font-mono text-xs text-signal-orange font-semibold">01 //</span>
+          <h2 class="font-serif text-3xl sm:text-4xl tracking-tight">Field Experience &amp; Lab Logbook</h2>
+        </div>
+        <span class="font-mono text-xs text-paper-muted dark:text-bench-muted hidden sm:inline">2 RECORDED DEPLOYMENTS</span>
+      </div>
+
+      <div class="space-y-6">
+        
+        <!-- Entry 01: Thinkfotech -->
+        <article class="border border-paper-border dark:border-bench-border bg-paper/80 dark:bg-bench/80 rounded-lg p-5 sm:p-7 hover:border-signal-orange/60 transition-colors">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-4 border-b border-paper-border dark:border-bench-border">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs px-2 py-0.5 rounded bg-paper-card dark:bg-bench-card border border-paper-border dark:border-bench-border">LOG-2026B</span>
+                <h3 class="text-lg sm:text-xl font-semibold">Engineering Intern</h3>
+              </div>
+              <p class="text-sm text-paper-muted dark:text-bench-muted mt-0.5">
+                <strong class="text-paper-ink dark:text-bench-ink">Thinkfotech</strong> — Technology Solutions &amp; Product Development
+              </p>
+            </div>
+            <div class="font-mono text-xs text-paper-muted dark:text-bench-muted sm:text-right">
+              <div class="text-paper-ink dark:text-bench-ink font-medium">JUN 2026 – JUL 2026</div>
+              <div>Duration: 1 Month</div>
+            </div>
+          </div>
+
+          <ul class="space-y-2.5 text-sm sm:text-base text-paper-ink/90 dark:text-bench-ink/90">
+            <li class="flex items-start gap-2.5">
+              <span class="font-mono text-xs text-signal-orange mt-1">&gt;</span>
+              <span>Executed modern technical workflows, researching hardware and system specifications and distilling findings into structured engineering summary reports.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="font-mono text-xs text-signal-orange mt-1">&gt;</span>
+              <span>Collaborated directly with product engineers to verify hardware-software integration benches and maintain clean, reproducible technical documentation.</span>
+            </li>
+          </ul>
+        </article>
+
+        <!-- Entry 02: Wible -->
+        <article class="border border-paper-border dark:border-bench-border bg-paper/80 dark:bg-bench/80 rounded-lg p-5 sm:p-7 hover:border-signal-orange/60 transition-colors">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-4 border-b border-paper-border dark:border-bench-border">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs px-2 py-0.5 rounded bg-paper-card dark:bg-bench-card border border-paper-border dark:border-bench-border">LOG-2026A</span>
+                <h3 class="text-lg sm:text-xl font-semibold">AI Development Intern</h3>
+              </div>
+              <p class="text-sm text-paper-muted dark:text-bench-muted mt-0.5">
+                <strong class="text-paper-ink dark:text-bench-ink">Wible</strong> — AI Code Evaluation &amp; Wireless Systems Documentation
+              </p>
+            </div>
+            <div class="font-mono text-xs text-paper-muted dark:text-bench-muted sm:text-right">
+              <div class="text-paper-ink dark:text-bench-ink font-medium">FEB 2026 – MAR 2026</div>
+              <div>Duration: 2 Months</div>
+            </div>
+          </div>
+
+          <ul class="space-y-2.5 text-sm sm:text-base text-paper-ink/90 dark:text-bench-ink/90">
+            <li class="flex items-start gap-2.5">
+              <span class="font-mono text-xs text-signal-orange mt-1">&gt;</span>
+              <span>Leveraged Large Language Models (LLMs) for rapid code generation, systematic debugging, and rigorous human evaluation of AI outputs for technical accuracy and edge-case safety.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="font-mono text-xs text-signal-orange mt-1">&gt;</span>
+              <span>Authored clear user guides and technical documentation translating complex wireless parameters and embedded configurations into accessible field manuals.</span>
+            </li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 02 // HARDWARE & SOFTWARE BUILDS (WITH LIVE GITHUB SYNC)              -->
+    <!-- ===================================================================== -->
+    <section id="builds" class="mb-16 scroll-mt-20">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-paper-border dark:border-bench-border pb-3 mb-6">
+        <div class="flex items-baseline gap-3">
+          <span class="font-mono text-xs text-signal-orange font-semibold">02 //</span>
+          <h2 class="font-serif text-3xl sm:text-4xl tracking-tight">Hardware &amp; Software Builds</h2>
+        </div>
+        <div class="flex items-center gap-2 font-mono text-xs">
+          <span id="ghSyncDot" class="w-2 h-2 rounded-full bg-signal-green"></span>
+          <span id="ghSyncStatus" class="text-paper-muted dark:text-bench-muted">LIVE SYNCED (3 PUBLIC REPOS)</span>
+        </div>
+      </div>
+
+      <!-- Curated Featured Engineering Schematics -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+
+        <!-- Build 01: Bluject -->
+        <div class="border border-paper-border dark:border-bench-border bg-paper/90 dark:bg-bench/90 rounded-lg p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between font-mono text-xs text-paper-muted dark:text-bench-muted mb-3">
+              <span>BUILD // 01</span>
+              <span class="px-2 py-0.5 rounded bg-paper-card dark:bg-bench-card text-paper-ink dark:text-bench-ink">C++ / ESP32</span>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Bluject</h3>
+            <p class="text-sm text-paper-muted dark:text-bench-muted leading-relaxed mb-4">
+              Embedded Bluetooth packet research and wireless testing utility built for ESP32 microcontrollers to inspect low-level BLE advertising frames and connection behavior.
+            </p>
+          </div>
+
+          <div class="space-y-3 pt-3 border-t border-paper-border dark:border-bench-border">
+            <button onclick="toggleArchDrawer('arch-bluject', this)" class="w-full text-left font-mono text-xs text-signal-orange hover:underline flex items-center justify-between">
+              <span>[+ Architecture Notes]</span>
+              <span>ESP32 · BLE Stack</span>
+            </button>
+            <div id="arch-bluject" class="hidden text-xs font-mono bg-paper-card dark:bg-bench-card p-3 rounded border border-paper-border dark:border-bench-border space-y-1 text-paper-muted dark:text-bench-muted">
+              <div>• Target MCU: ESP32 Dual-Core Xtensa</div>
+              <div>• Focus: Raw BLE frame inspection &amp; radio parameter testing</div>
+              <div>• Role: Firmware prototyping &amp; hardware verification</div>
+            </div>
+            <a href="https://github.com/Aromalajith8" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-mono text-xs hover:text-signal-orange">
+              <span>Inspect on GitHub</span>
+              <span>↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Build 02: Wible -->
+        <div class="border border-paper-border dark:border-bench-border bg-paper/90 dark:bg-bench/90 rounded-lg p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between font-mono text-xs text-paper-muted dark:text-bench-muted mb-3">
+              <span>BUILD // 02</span>
+              <span class="px-2 py-0.5 rounded bg-paper-card dark:bg-bench-card text-paper-ink dark:text-bench-ink">Wireless / LLM Eval</span>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Wible Wireless Docs &amp; Tooling</h3>
+            <p class="text-sm text-paper-muted dark:text-bench-muted leading-relaxed mb-4">
+              Structured technical documentation and LLM-verified configuration references demystifying wireless radio parameters, signal tolerances, and embedded setup workflows.
+            </p>
+          </div>
+
+          <div class="space-y-3 pt-3 border-t border-paper-border dark:border-bench-border">
+            <button onclick="toggleArchDrawer('arch-wible', this)" class="w-full text-left font-mono text-xs text-signal-orange hover:underline flex items-center justify-between">
+              <span>[+ Architecture Notes]</span>
+              <span>Docs · Prompt QA</span>
+            </button>
+            <div id="arch-wible" class="hidden text-xs font-mono bg-paper-card dark:bg-bench-card p-3 rounded border border-paper-border dark:border-bench-border space-y-1 text-paper-muted dark:text-bench-muted">
+              <div>• Pipeline: LLM Draft → Datasheet Fact-Check → Field Guide</div>
+              <div>• Focus: Eliminating hallucinated wireless parameters</div>
+              <div>• Output: Developer-ready reference guides</div>
+            </div>
+            <a href="https://github.com/Aromalajith8" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-mono text-xs hover:text-signal-orange">
+              <span>Inspect on GitHub</span>
+              <span>↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Build 03: Terminal E2EE Chat -->
+        <div class="border border-paper-border dark:border-bench-border bg-paper/90 dark:bg-bench/90 rounded-lg p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between font-mono text-xs text-paper-muted dark:text-bench-muted mb-3">
+              <span>BUILD // 03</span>
+              <span class="px-2 py-0.5 rounded bg-paper-card dark:bg-bench-card text-paper-ink dark:text-bench-ink">Python / Crypto</span>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Terminal E2EE Chat</h3>
+            <p class="text-sm text-paper-muted dark:text-bench-muted leading-relaxed mb-4">
+              Zero-bloat command-line messaging tool featuring end-to-end encryption so payloads remain unreadable in transit across untrusted relay sockets.
+            </p>
+          </div>
+
+          <div class="space-y-3 pt-3 border-t border-paper-border dark:border-bench-border">
+            <button onclick="toggleArchDrawer('arch-e2ee', this)" class="w-full text-left font-mono text-xs text-signal-orange hover:underline flex items-center justify-between">
+              <span>[+ Architecture Notes]</span>
+              <span>CLI · Sockets</span>
+            </button>
+            <div id="arch-e2ee" class="hidden text-xs font-mono bg-paper-card dark:bg-bench-card p-3 rounded border border-paper-border dark:border-bench-border space-y-1 text-paper-muted dark:text-bench-muted">
+              <div>• Interface: Pure CLI terminal interface</div>
+              <div>• Security: Client-side key exchange &amp; payload ciphering</div>
+              <div>• Transport: Lightweight TCP socket relay</div>
+            </div>
+            <a href="https://github.com/Aromalajith8" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-mono text-xs hover:text-signal-orange">
+              <span>Inspect on GitHub</span>
+              <span>↗</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Dynamic Live GitHub Repositories Feed -->
+      <div class="border border-paper-border dark:border-bench-border bg-paper-card/50 dark:bg-bench-card/50 rounded-lg p-4 sm:p-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="font-mono text-xs uppercase tracking-wider text-paper-muted dark:text-bench-muted">
+            LIVE TELEMETRY // PUBLIC REPOSITORIES FROM <span class="text-paper-ink dark:text-bench-ink font-semibold">github.com/Aromalajith8</span>
+          </div>
+          <a href="https://github.com/Aromalajith8?tab=repositories" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-signal-orange hover:underline">
+            View Full GitHub Index →
+          </a>
+        </div>
+        <div id="liveGithubReposGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <a href="https://github.com/Aromalajith8/Bluject" target="_blank" rel="noopener noreferrer" class="block p-3.5 rounded border border-paper-border dark:border-bench-border bg-paper dark:bg-bench hover:border-signal-orange transition-colors">
+              <div class="flex items-center justify-between gap-2 font-mono text-xs mb-1">
+                <span class="font-semibold text-paper-ink dark:text-bench-ink truncate">Bluject</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-paper-card dark:bg-bench-card shrink-0">C++</span>
+              </div>
+              <p class="text-xs text-paper-muted dark:text-bench-muted line-clamp-2">An open-source, multi-OS BLE HID keystroke injection tool built for the ESP32. Features an air-gapped WiFi captive portal for ethical hacking and red team payloads.</p>
+            </a>
+          
+            <a href="https://github.com/Aromalajith8/sage" target="_blank" rel="noopener noreferrer" class="block p-3.5 rounded border border-paper-border dark:border-bench-border bg-paper dark:bg-bench hover:border-signal-orange transition-colors">
+              <div class="flex items-center justify-between gap-2 font-mono text-xs mb-1">
+                <span class="font-semibold text-paper-ink dark:text-bench-ink truncate">sage</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-paper-card dark:bg-bench-card shrink-0">TypeScript</span>
+              </div>
+              <p class="text-xs text-paper-muted dark:text-bench-muted line-clamp-2">A free, open-source, end-to-end encrypted chat app with a terminal aesthetic.</p>
+            </a>
+          
+            <a href="https://github.com/Aromalajith8/Wible" target="_blank" rel="noopener noreferrer" class="block p-3.5 rounded border border-paper-border dark:border-bench-border bg-paper dark:bg-bench hover:border-signal-orange transition-colors">
+              <div class="flex items-center justify-between gap-2 font-mono text-xs mb-1">
+                <span class="font-semibold text-paper-ink dark:text-bench-ink truncate">Wible</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-paper-card dark:bg-bench-card shrink-0">C++</span>
+              </div>
+              <p class="text-xs text-paper-muted dark:text-bench-muted line-clamp-2">"An educational ESP32 PoC demonstrating 802.11 bare-metal packet capture, FreeRTOS memory management, and BLE protocol exploration."</p>
+            </a>
+          </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 03 // CAPABILITY MATRIX (NO FAKE PERCENTAGE BARS)                     -->
+    <!-- ===================================================================== -->
+    <section id="matrix" class="mb-16 scroll-mt-20">
+      <div class="flex items-baseline justify-between border-b border-paper-border dark:border-bench-border pb-3 mb-6">
+        <div class="flex items-baseline gap-3">
+          <span class="font-mono text-xs text-signal-orange font-semibold">03 //</span>
+          <h2 class="font-serif text-3xl sm:text-4xl tracking-tight">Verified Capability Matrix</h2>
+        </div>
+        <span class="font-mono text-xs text-paper-muted dark:text-bench-muted hidden sm:inline">EVIDENCE-BACKED · NO ARBITRARY % BARS</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        
+        <!-- Column 1: AI & Evaluation -->
+        <div class="border border-paper-border dark:border-bench-border bg-paper/85 dark:bg-bench/85 rounded-lg p-5">
+          <div class="font-mono text-xs text-signal-orange uppercase mb-1">DOMAIN A</div>
+          <h3 class="text-lg font-semibold mb-3">AI Review &amp; LLM Evaluation</h3>
+          <p class="text-xs text-paper-muted dark:text-bench-muted mb-4">
+            Auditing generative models for code correctness, factual grounding, and adherence to complex constraints.
+          </p>
+          <ul class="space-y-2 font-mono text-xs">
+            <li class="px-3 py-2 rounded bg-paper-card dark:bg-bench-card border border-paper-border dark:border-bench-border flex justify-between">
+              <span>AI Prompt Engineering</span>
+              <span class="text-signal-green">[PROD]</span>
+            </li>
+            <li class="px-3 py-2 rounded bg-paper-card dark:bg-bench-card border border-paper-border dark:border-bench-border flex justify-between">
+              <span>LLM Code &amp; Output Evaluation</span>
+              <span class="text-signal-green">[PROD]</span>
+            </li>
+            <li class="px-3 py-2 rounded bg-paper-card dark:bg-bench-card border border-paper-border dark:border-bench-border flex justify-between">
+              <span>Technical Fact-Checking</span>
+              <span class="text-signal-green">[PROD]</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Column 2: Technical Editorial -->
+        <div class="border border-paper-border dark:border-bench-border bg-paper/85 dark:bg-bench/85 rounded-lg p-5">
+          <div class="font-mono text-xs text-signal-orange uppercase mb-1">DOMAIN B</div>
+          <h3 class="text-lg font-semibold mb-3">Technical Writing &amp; Specs</h3>
+          <p class="text-xs text-paper-muted dark:text-bench-muted mb-4">
+            Translating dense hardware datasheets, wireless parameters, and engineering workflows into crisp human prose.
+          </p>
+          <ul class="space-y-2 font-mono text-xs">
+            <li class="px-3 py-2 rounded bg-paper-card dark:bg-bench-card border border-paper-border dark:border-bench-border flex justify-between">
+              <span>Technical Documentation</span>
+              <span class="text-signal-green">[PROD]</span>
+            </li>
+            <li class="px-3 py-2 rounded bg-paper-card dark:bg-bench-card border border-paper-border dark:border-bench-border flex justify-between">
+              <span>Content Editing &amp; Clarity</span>
+              <span class="text-signal-green">[PROD]</span>
+            </li>
+            <li class="px-3 py-2 rounded bg-paper-card dark:bg-bench-card border border-paper-border dark:border-bench-border flex justify-between">
+              <span>Wireless Parameter Guides</span>
+              <span class="text-signal-green">[PROD]</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Engineering & Code -->
+        <div class="border border-paper-border dark:border-bench-border bg-paper/85 dark:bg-bench/85 rounded-lg p-5">
+          <div class="font-mono text-xs text-signal-orange uppercase mb-1">DOMAIN C</div>
+          <h3 class="text-lg font-semibold mb-3">Electronics &amp; Programming</h3>
+          <p class="text-xs text-paper-muted dark:text-bench-muted mb-4">
+            Hands-on embedded prototyping, firmware debugging, and hardware-software integration verification.
+          </p>
+          <ul class="space-y-2 font-mono text-xs">
+            <li class="px-3 py-2 rounded bg-paper-card dark:bg-bench-card border border-paper-border dark:border-bench-border flex justify-between">
+              <span>Python &amp; C++</span>
+              <span class="text-signal-green">[CORE]</span>
+            </li>
+            <li class="px-3 py-2 rounded bg-paper-card dark:bg-bench-card border border-paper-border dark:border-bench-border flex justify-between">
+              <span>Hardware-Software Integration</span>
+              <span class="text-signal-green">[LAB]</span>
+            </li>
+            <li class="px-3 py-2 rounded bg-paper-card dark:bg-bench-card border border-paper-border dark:border-bench-border flex justify-between">
+              <span>Digital &amp; Embedded Electronics</span>
+              <span class="text-signal-green">[DIPLOMA]</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 04 // ACADEMIC FOUNDATIONS & HONORS                                   -->
+    <!-- ===================================================================== -->
+    <section id="education" class="mb-16 scroll-mt-20">
+      <div class="flex items-baseline justify-between border-b border-paper-border dark:border-bench-border pb-3 mb-6">
+        <div class="flex items-baseline gap-3">
+          <span class="font-mono text-xs text-signal-orange font-semibold">04 //</span>
+          <h2 class="font-serif text-3xl sm:text-4xl tracking-tight">Academic Foundations &amp; Honors</h2>
+        </div>
+        <span class="font-mono text-xs text-paper-muted dark:text-bench-muted hidden sm:inline">GRADUATION COHORT: 2025</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        
+        <!-- Diploma -->
+        <div class="border border-paper-border dark:border-bench-border bg-paper/85 dark:bg-bench/85 rounded-lg p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between font-mono text-xs text-paper-muted dark:text-bench-muted mb-2">
+              <span>GPC MATTANNUR</span>
+              <span>CLASS OF 2025</span>
+            </div>
+            <h3 class="text-xl font-semibold mb-1">Diploma in Electronics Engineering</h3>
+            <p class="text-sm text-paper-muted dark:text-bench-muted mb-4">
+              Government Polytechnic College, Mattannur — Kerala
+            </p>
+          </div>
+          <div class="pt-4 border-t border-paper-border dark:border-bench-border flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
+            <span class="px-2.5 py-1 rounded bg-paper-card dark:bg-bench-card font-semibold">Overall CGPA: 8.05</span>
+            <span class="px-2.5 py-1 rounded bg-signal-orange/15 text-signal-orange font-medium">★ Project Leader Award</span>
+          </div>
+        </div>
+
+        <!-- Higher Secondary -->
+        <div class="border border-paper-border dark:border-bench-border bg-paper/85 dark:bg-bench/85 rounded-lg p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between font-mono text-xs text-paper-muted dark:text-bench-muted mb-2">
+              <span>KERALA STATE BOARD</span>
+              <span>CLASS OF 2025</span>
+            </div>
+            <h3 class="text-xl font-semibold mb-1">Higher Secondary Education in Science</h3>
+            <p class="text-sm text-paper-muted dark:text-bench-muted mb-4">
+              Physics, Chemistry, Mathematics &amp; Science Stream
+            </p>
+          </div>
+          <div class="pt-4 border-t border-paper-border dark:border-bench-border flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
+            <span class="px-2.5 py-1 rounded bg-paper-card dark:bg-bench-card font-semibold">Score: 91.83%</span>
+            <span class="px-2.5 py-1 rounded bg-signal-orange/15 text-signal-orange font-medium">★ Science Excellence Award</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 05 // DISPATCH / CONTACT BENCH                                        -->
+    <!-- ===================================================================== -->
+    <section id="dispatch" class="scroll-mt-20 border border-paper-border dark:border-bench-border bg-paper-card/80 dark:bg-bench-card/80 rounded-lg p-6 sm:p-10 corner-mark">
+      <div class="max-w-2xl">
+        <div class="font-mono text-xs text-signal-orange uppercase mb-2">05 // TRANSMISSION CHANNEL</div>
+        <h2 class="font-serif text-3xl sm:text-5xl tracking-tight mb-3">
+          Need an AI output auditor, technical writer, or embedded tinkerer?
+        </h2>
+        <p class="text-sm sm:text-base text-paper-muted dark:text-bench-muted mb-6">
+          Direct email or LinkedIn is the fastest way to reach my bench. No automated chatbots—just a direct reply from Kerala.
+        </p>
+
+        <div class="flex flex-wrap items-center gap-3 font-mono text-xs">
+          <a href="mailto:aromalajith2007@gmail.com" class="px-4 py-3 rounded bg-signal-orange text-white font-medium hover:opacity-95 transition-opacity">
+            aromalajith2007@gmail.com
+          </a>
+          <button onclick="copyToClipboard('aromalajith2007@gmail.com', this)" class="px-4 py-3 rounded border border-paper-border dark:border-bench-border bg-paper dark:bg-bench hover:border-signal-orange transition-colors">
+            [Copy Email]
+          </button>
+          <a href="tel:+919544149480" class="px-4 py-3 rounded border border-paper-border dark:border-bench-border bg-paper dark:bg-bench hover:border-signal-orange transition-colors">
+            Ph: +91 9544149480
+          </a>
+          <a href="https://www.linkedin.com/in/aromal-ajith-a80171343" target="_blank" rel="noopener noreferrer" class="px-4 py-3 rounded border border-paper-border dark:border-bench-border bg-paper dark:bg-bench hover:border-signal-orange transition-colors">
+            LinkedIn Profile ↗
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- FOOTER                                                                -->
+  <!-- ===================================================================== -->
+  <footer class="border-t border-paper-border dark:border-bench-border py-6 px-4 sm:px-6 font-mono text-xs text-paper-muted dark:text-bench-muted">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>AROMAL AJITH // HAND-CRAFTED FIELD MANUAL EDITION</div>
+      <div>HOSTED ON GITHUB PAGES · ZERO BLOAT SINGLE-FILE ARCHITECTURE</div>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- GITHUB PAGES 1-CLICK EXPORTER & LIVE API PUBLISHER MODAL              -->
+  <!-- (Automatically stripped when downloading clean index.html)            -->
+  <!-- ===================================================================== -->
+  
+
+  <!-- ===================================================================== -->
+  <!-- INTERACTIVE SCRIPTS: CLOCK, BENCH MODE, GITHUB SYNC, CLEAN EXPORTER   -->
+  <!-- ===================================================================== -->
+  <script>
+    // 1. Live Kerala (IST) Telemetry Clock
+    function updateClock() {
+      const el = document.getElementById('liveClock');
+      if (!el) return;
+      try {
+        const now = new Date();
+        const istTime = now.toLocaleTimeString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        el.textContent = 'IST ' + istTime;
+      } catch (e) {
+        el.textContent = 'IST +05:30';
+      }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 2. Night Bench Mode Toggle
+    function toggleBenchMode() {
+      const htmlEl = document.documentElement;
+      const isDark = htmlEl.classList.toggle('dark');
+      const label = document.getElementById('themeLabel');
+      if (label) {
+        label.textContent = isDark ? 'BENCH: ON' : 'BENCH: OFF';
+      }
+      try {
+        localStorage.setItem('aa_bench_mode', isDark ? 'dark' : 'light');
+      } catch (err) {}
+    }
+
+    // Restore saved theme on load
+    (function initTheme() {
+      try {
+        const saved = localStorage.getItem('aa_bench_mode');
+        if (saved === 'dark') {
+          document.documentElement.classList.add('dark');
+          const label = document.getElementById('themeLabel');
+          if (label) label.textContent = 'BENCH: ON';
+        }
+      } catch (err) {}
+    })();
+
+    // 3. Architecture Drawer Toggle
+    function toggleArchDrawer(id, btn) {
+      const drawer = document.getElementById(id);
+      if (!drawer) return;
+      const isHidden = drawer.classList.toggle('hidden');
+      const firstSpan = btn.querySelector('span');
+      if (firstSpan) {
+        firstSpan.textContent = isHidden ? '[+ Architecture Notes]' : '[- Architecture Notes]';
+      }
+    }
+
+    // 4. Clipboard Helper (iframe-safe)
+    function copyToClipboard(text, btnEl) {
+      const tempInput = document.createElement('textarea');
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+
+      if (btnEl) {
+        const original = btnEl.textContent;
+        btnEl.textContent = '[Copied ✓]';
+        setTimeout(() => {
+          btnEl.textContent = original;
+        }, 1800);
+      }
+    }
+
+    // 5. Live GitHub API Sync for @Aromalajith8
+    async function syncGitHubRepos() {
+      const grid = document.getElementById('liveGithubReposGrid');
+      const statusText = document.getElementById('ghSyncStatus');
+      if (!grid) return;
+
+      try {
+        const response = await fetch('https://api.github.com/users/Aromalajith8/repos?sort=updated&per_page=6');
+        if (!response.ok) throw new Error('GitHub API rate limit or offline');
+        const repos = await response.json();
+
+        if (!Array.isArray(repos) || repos.length === 0) {
+          grid.innerHTML = '<div class="font-mono text-xs text-paper-muted dark:text-bench-muted">Connected to @Aromalajith8 — Public repositories ready.</div>';
+          return;
+        }
+
+        grid.innerHTML = repos.map(repo => {
+          const lang = repo.language || 'Repository';
+          const desc = repo.description
+            ? repo.description
+            : 'Engineering repository and source files maintained by Aromal Ajith.';
+          return `
+            <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer"
+               class="block p-3.5 rounded border border-paper-border dark:border-bench-border bg-paper dark:bg-bench hover:border-signal-orange transition-colors">
+              <div class="flex items-center justify-between gap-2 font-mono text-xs mb-1">
+                <span class="font-semibold text-paper-ink dark:text-bench-ink truncate">${repo.name}</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-paper-card dark:bg-bench-card shrink-0">${lang}</span>
+              </div>
+              <p class="text-xs text-paper-muted dark:text-bench-muted line-clamp-2">${desc}</p>
+            </a>
+          `;
+        }).join('');
+
+        if (statusText) {
+          statusText.textContent = `LIVE SYNCED (${repos.length} PUBLIC REPOS)`;
+        }
+      } catch (err) {
+        grid.innerHTML = `
+          <a href="https://github.com/Aromalajith8" target="_blank" rel="noopener noreferrer" class="block p-3 rounded border border-paper-border dark:border-bench-border font-mono text-xs hover:border-signal-orange">
+            github.com/Aromalajith8 &nearr; — Browse all repositories directly on GitHub
+          </a>
+        `;
+      }
+    }
+    syncGitHubRepos();
+
+    // 6. GitHub Pages Deploy Modal & Clean HTML Generator
+    function openDeployModal() {
+      const m = document.getElementById('deployModal');
+      if (m) m.classList.remove('hidden');
+    }
+    function closeDeployModal() {
+      const m = document.getElementById('deployModal');
+      if (m) m.classList.add('hidden');
+    }
+    function switchDeployTab(tab) {
+      const manual = document.getElementById('deployTabManual');
+      const auto = document.getElementById('deployTabAuto');
+      const btnM = document.getElementById('tabManualBtn');
+      const btnA = document.getElementById('tabAutoBtn');
+
+      if (tab === 'manual') {
+        manual.classList.remove('hidden');
+        auto.classList.add('hidden');
+        btnM.className = 'py-2 px-3 rounded bg-paper dark:bg-bench font-semibold shadow-sm text-center';
+        btnA.className = 'py-2 px-3 rounded text-paper-muted dark:text-bench-muted text-center';
+      } else {
+        manual.classList.add('hidden');
+        auto.classList.remove('hidden');
+        btnA.className = 'py-2 px-3 rounded bg-paper dark:bg-bench font-semibold shadow-sm text-center';
+        btnM.className = 'py-2 px-3 rounded text-paper-muted dark:text-bench-muted text-center';
+      }
+    }
+
+    // Build clean production HTML without export helper UI
+    function getCleanProductionHtml() {
+      const clone = document.documentElement.cloneNode(true);
+      clone.classList.remove('dark');
+      const stripTargets = clone.querySelectorAll('[data-export-strip="true"]');
+      stripTargets.forEach(el => el.remove());
+      return '<!DOCTYPE html>\n' + clone.outerHTML;
+    }
+
+    function downloadCleanIndexHtml() {
+      const cleanHtml = getCleanProductionHtml();
+      const blob = new Blob([cleanHtml], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'index.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Direct Browser-to-GitHub API Auto-Deployer
+    async function pushDirectlyToGitHub() {
+      const tokenInput = document.getElementById('ghTokenInput');
+      const logBox = document.getElementById('autoPushLog');
+      const btn = document.getElementById('autoPushBtn');
+      const token = (tokenInput.value || '').trim();
+
+      logBox.classList.remove('hidden');
+      if (!token) {
+        logBox.textContent = '⚠️ Please paste your GitHub Personal Access Token first (or use Method A to download index.html).';
+        return;
+      }
+
+      const owner = 'Aromalajith8';
+      const repo = 'Aromalajith8.github.io';
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      };
+
+      try {
+        btn.disabled = true;
+        logBox.textContent = '1/3 Checking or creating repository Aromalajith8/Aromalajith8.github.io...';
+
+        // Check if repo exists; if not, create it
+        const checkRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
+        if (checkRes.status === 404) {
+          const createRes = await fetch('https://api.github.com/user/repos', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              name: repo,
+              description: 'Personal Portfolio & Engineering Logbook of Aromal Ajith',
+              homepage: 'https://aromalajith8.github.io',
+              private: false,
+              auto_init: true
+            })
+          });
+          if (!createRes.ok) {
+            const errData = await createRes.json();
+            throw new Error(errData.message || 'Could not create repository.');
+          }
+        }
+
+        logBox.textContent = '2/3 Encoding clean index.html and pushing to main branch...';
+        const cleanHtml = getCleanProductionHtml();
+        const base64Content = btoa(unescape(encodeURIComponent(cleanHtml)));
+
+        // Check if index.html already exists to include its SHA
+        let existingSha = undefined;
+        const fileCheck = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/index.html`, { headers });
+        if (fileCheck.ok) {
+          const fileJson = await fileCheck.json();
+          existingSha = fileJson.sha;
+        }
+
+        const putBody = {
+          message: 'Deploy portfolio index.html',
+          content: base64Content
+        };
+        if (existingSha) putBody.sha = existingSha;
+
+        const putRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/index.html`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(putBody)
+        });
+
+        if (!putRes.ok) {
+          const putErr = await putRes.json();
+          throw new Error(putErr.message || 'Failed to push index.html');
+        }
+
+        logBox.innerHTML = `✅ SUCCESS! Your portfolio has been pushed to GitHub.\n\n• Repository: https://github.com/${owner}/${repo}\n• Live URL (ready in ~60s): https://aromalajith8.github.io`;
+      } catch (err) {
+        logBox.textContent = `❌ GitHub API Error: ${err.message}\nTip: You can always use Method A (Download Clean index.html) and drag-and-drop it into GitHub!`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+
+</body></html>
